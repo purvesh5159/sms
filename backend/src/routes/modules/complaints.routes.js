@@ -33,13 +33,28 @@ router.post('/', [
 ], async (req, res, next) => {
 	try {
 		const { flatId, category, description, priority } = req.body;
-		const [[row]] = await sequelize.query(
+
+		// Ensure a value exists for :priority (null if not provided)
+		const priorityParam = Number.isFinite(Number(priority)) ? Number(priority) : null;
+
+		const [rows] = await sequelize.query(
 			`INSERT INTO complaints (society_id, flat_id, created_by_user_id, category, description, priority)
 			 VALUES (:sid, :flatId, :uid, :category, :description, COALESCE(:priority, 3))
-			 RETURNING id, category, description, status, priority` ,
-			{ replacements: { sid: req.societyId, flatId, uid: req.user.userId, category, description, priority }, type: sequelize.QueryTypes.INSERT }
+			 RETURNING id, category, description, status, priority`,
+			{
+				replacements: {
+					sid: req.societyId,
+					flatId,
+					uid: req.user.userId,
+					category,
+					description,
+					priority: priorityParam
+				}
+			}
 		);
-		res.status(201).json(row);
+
+		const row = rows?.[0];
+		return res.status(201).json(row);
 	} catch (e) { next(e); }
 });
 
