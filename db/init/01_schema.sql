@@ -129,6 +129,7 @@ CREATE TABLE IF NOT EXISTS flats (
 	created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 	updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 	UNIQUE(tower_id, number),
+	UNIQUE(id, society_id),
 	FOREIGN KEY (tower_id, society_id) REFERENCES towers(id, society_id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS idx_flats_tower_id ON flats(tower_id);
@@ -299,7 +300,8 @@ CREATE TABLE IF NOT EXISTS polls (
 	updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 	CHECK (type <> 'multiple_choice' OR options IS NOT NULL),
 	CHECK (type = 'yes_no' OR jsonb_typeof(options) = 'array'),
-	UNIQUE(society_id, title)
+	UNIQUE(society_id, title),
+	UNIQUE(id, society_id)
 );
 CREATE INDEX IF NOT EXISTS idx_polls_type ON polls(type);
 CREATE INDEX IF NOT EXISTS idx_polls_society_id ON polls(society_id);

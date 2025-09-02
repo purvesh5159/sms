@@ -56,26 +56,39 @@ SELECT (SELECT id FROM societies WHERE code='GM'), (SELECT id FROM users WHERE e
 ON CONFLICT (society_id, user_id) DO NOTHING;
 
 -- Assign roles to memberships (within same society)
--- Helper: membership x role rows for easy joins
+-- Admin -> Admin role in all societies
 WITH m AS (
 	SELECT sm.id AS membership_id, sm.society_id, u.email
 	FROM society_memberships sm JOIN users u ON u.id = sm.user_id
 ), r AS (
 	SELECT roles.id AS role_id, roles.society_id, roles.name AS role_name FROM roles
 )
--- Admin -> Admin role in all societies
 INSERT INTO society_user_roles (membership_id, role_id, society_id)
 SELECT m.membership_id, r.role_id, m.society_id
 FROM m JOIN r ON r.society_id = m.society_id AND r.role_name = 'Admin'
 WHERE m.email = 'admin@society.local'
 ON CONFLICT DO NOTHING;
+
 -- Security -> Security role (GM)
+WITH m AS (
+	SELECT sm.id AS membership_id, sm.society_id, u.email
+	FROM society_memberships sm JOIN users u ON u.id = sm.user_id
+), r AS (
+	SELECT roles.id AS role_id, roles.society_id, roles.name AS role_name FROM roles
+)
 INSERT INTO society_user_roles (membership_id, role_id, society_id)
 SELECT m.membership_id, r.role_id, m.society_id
 FROM m JOIN r ON r.society_id = m.society_id AND r.role_name = 'Security'
 WHERE m.email = 'guard@society.local'
 ON CONFLICT DO NOTHING;
+
 -- Residents -> Resident role (GM)
+WITH m AS (
+	SELECT sm.id AS membership_id, sm.society_id, u.email
+	FROM society_memberships sm JOIN users u ON u.id = sm.user_id
+), r AS (
+	SELECT roles.id AS role_id, roles.society_id, roles.name AS role_name FROM roles
+)
 INSERT INTO society_user_roles (membership_id, role_id, society_id)
 SELECT m.membership_id, r.role_id, m.society_id
 FROM m JOIN r ON r.society_id = m.society_id AND r.role_name = 'Resident'
